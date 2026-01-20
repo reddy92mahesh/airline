@@ -1,11 +1,7 @@
 import streamlit as st
 import pandas as pd
-import os
 
 st.set_page_config(page_title="Airline App", layout="wide")
-
-st.write("Files in current directory:")
-st.write(os.listdir("."))
 
 @st.cache_data
 def load_data():
@@ -13,5 +9,6 @@ def load_data():
 
 df = load_data()
 
-st.title("Streamlit is Working")
+st.title("✈️ Airline Customer Data")
+st.subheader("Data Preview")
 st.dataframe(df.head())
