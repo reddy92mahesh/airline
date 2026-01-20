@@ -5,7 +5,7 @@ import seaborn as sns
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
 
-st.set_page_config(page_title="Airline Customer App", layout="wide")
+st.set_page_config(page_title="Airline Customer Segmentation", layout="wide")
 
 @st.cache_data
 def load_data():
@@ -13,32 +13,75 @@ def load_data():
 
 df = load_data()
 
-st.title("✈️ Airline Customer Data Analysis")
+st.title("✈️ Airline Customer Segmentation Dashboard")
+st.caption("Interactive analysis and customer clustering using KMeans")
 
-# -------------------- Data Preview --------------------
-st.subheader("Data Preview")
-st.dataframe(df.head(), use_container_width=True)
+# -------------------- TABS --------------------
+tab1, tab2, tab3 = st.tabs(["📊 Data Overview", "🤖 Clustering", "💡 Business Insights"])
 
-# -------------------- Sidebar --------------------
-st.sidebar.header("Controls")
+# ==================== TAB 1 ====================
+with tab1:
+    st.subheader("Dataset Preview")
+    st.dataframe(df.head(), use_container_width=True)
 
-k = st.sidebar.slider("Select number of clusters (K)", 2, 8, 3)
+    st.subheader("Summary Statistics")
+    st.write(df.describe())
 
-# -------------------- Clustering --------------------
-features = df.drop(columns=["ID#"])
+# ==================== TAB 2 ====================
+with tab2:
+    st.sidebar.header("Clustering Controls")
 
-scaler = StandardScaler()
-scaled_data = scaler.fit_transform(features)
+    k = st.sidebar.slider("Select Number of Clusters (K)", 2, 8, 3)
 
-kmeans = KMeans(n_clusters=k, random_state=42)
-df["Cluster"] = kmeans.fit_predict(scaled_data)
+    features = df.drop(columns=["ID#"])
+    scaler = StandardScaler()
+    scaled_data = scaler.fit_transform(features)
 
-st.subheader("Clustered Data (Preview)")
-st.dataframe(df.head(), use_container_width=True)
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    df["Cluster"] = kmeans.fit_predict(scaled_data)
 
-# -------------------- Visualization --------------------
-st.subheader("Cluster Distribution")
+    st.subheader("Clustered Customer Data")
+    st.dataframe(df.head(), use_container_width=True)
 
-fig, ax = plt.subplots()
-sns.countplot(x="Cluster", data=df, ax=ax)
-st.pyplot(fig)
+    col1, col2 = st.columns(2)
+
+    with col1:
+        st.subheader("Cluster Distribution")
+        fig, ax = plt.subplots()
+        sns.countplot(x="Cluster", data=df, ax=ax)
+        st.pyplot(fig)
+
+    with col2:
+        st.subheader("Average Balance per Cluster")
+        fig, ax = plt.subplots()
+        df.groupby("Cluster")["Balance"].mean().plot(kind="bar", ax=ax)
+        st.pyplot(fig)
+
+# ==================== TAB 3 ====================
+with tab3:
+    st.subheader("Cluster Interpretation (Business View)")
+
+    cluster_summary = df.groupby("Cluster").mean().round(2)
+    st.dataframe(cluster_summary, use_container_width=True)
+
+    st.markdown("""
+### 🧠 How to Interpret the Clusters
+
+- **High Balance & High Flight Miles**  
+  → *Frequent Flyers / Premium Customers*  
+  🎯 Offer loyalty rewards, upgrades, exclusive benefits
+
+- **Low Balance & Low Activity**  
+  → *Occasional Travelers*  
+  🎯 Target with discounts, promotional offers
+
+- **High Bonus Miles but Low Flights**  
+  → *Reward Collectors*  
+  🎯 Encourage flight usage via bonus redemption campaigns
+
+- **Recent Enrollment & Low Engagement**  
+  → *New Customers*  
+  🎯 Onboarding offers, welcome bonuses
+    """)
+
+    st.success("These insights help airlines design targeted marketing and retention strategies.")
